@@ -14,7 +14,7 @@ import (
 )
 
 func GetPosts(res http.ResponseWriter, req *http.Request) {
-	res.Header().Add("contrnt-type", "application/json")
+	res.Header().Add("content-type", "application/json")
 	db, ctx := database.ConnectDB()
 	defer database.CloseDB()
 

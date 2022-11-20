@@ -39,6 +39,7 @@ func GetUsers(res http.ResponseWriter, req *http.Request) {
 }
 
 func CreateUser(res http.ResponseWriter, req *http.Request) {
+	res.Header().Add("content-type", "application/json")
 	var user models.User
 	json.NewDecoder(req.Body).Decode(&user)
 	fmt.Println(user)
@@ -61,6 +62,7 @@ func CreateUser(res http.ResponseWriter, req *http.Request) {
 }
 
 func GetUser(res http.ResponseWriter, req *http.Request) {
+	res.Header().Add("content-type", "application/json")
 	params := mux.Vars(req)
 	// convert id to object id that monogo understands
 	id, _ := primitive.ObjectIDFromHex(params["id"])
@@ -77,6 +79,7 @@ func GetUser(res http.ResponseWriter, req *http.Request) {
 }
 
 func DeleteUser(res http.ResponseWriter, req *http.Request) {
+	res.Header().Add("content-type", "application/json")
 	params := mux.Vars(req)
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 	db, ctx := database.ConnectDB()
@@ -93,6 +96,7 @@ func DeleteUser(res http.ResponseWriter, req *http.Request) {
 }
 
 func UpdateUser(res http.ResponseWriter, req *http.Request) {
+	res.Header().Add("content-type", "application/json")
 	params := mux.Vars(req)
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 	var user models.User
