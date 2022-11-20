@@ -120,3 +120,89 @@ func UpdateUser(res http.ResponseWriter, req *http.Request) {
 	}
 	json.NewEncoder(res).Encode(result)
 }
+
+// Sign Up Handler
+func SignUp(res http.ResponseWriter, req *http.Request) {
+	db, ctx := database.ConnectDB()
+	defer database.CloseDB()
+
+	var user models.User
+	err := json.NewDecoder(req.Body).Decode(&user)
+	if err != nil {
+		helpers.ErrorResonse(err.Error(), http.StatusBadRequest, res)
+		return
+	}
+
+	//Validate data from client
+	validate := validator.New()
+	err = validate.Struct(user)
+	if err != nil {
+		helpers.ErrorResonse(err.Error(), http.StatusBadRequest, res)
+		return
+	}
+
+	// Check if email already exists
+	result := db.Collection(helpers.USER_COLLECTION).FindOne(ctx, bson.D{{Key: "email", Value: user.Email}})
+	//if there is no err, it means user exists
+	if result.Err() == nil {
+		helpers.ErrorResonse("Email already exist", http.StatusBadRequest, res)
+		return
+	}
+
+	// Hash password
+	user.Password, err = helpers.GeneratehashPassword(user.Password)
+	if err != nil {
+		helpers.SeverError(err, res)
+		return
+	}
+
+	//insert user details in database
+	createRes, err := db.Collection(helpers.USER_COLLECTION).InsertOne(ctx, user)
+	if err != nil {
+		helpers.ErrorResonse(err.Error(), http.StatusBadRequest, res)
+		return
+	}
+	res.WriteHeader(http.StatusCreated)
+	res.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(res).Encode(createRes)
+}
+
+// Sign In Handler
+func SignIn(res http.ResponseWriter, req *http.Request) {
+	db, ctx := database.ConnectDB()
+	defer database.CloseDB()
+
+	// Extract client data from request
+	var authdetails models.Authentication
+	err := json.NewDecoder(req.Body).Decode(&authdetails)
+	if err != nil {
+		helpers.ErrorResonse(err.Error(), http.StatusBadRequest, res)
+		return
+	}
+
+	var authuser models.User
+	err = db.Collection(helpers.USER_COLLECTION).FindOne(ctx, bson.D{{Key: "email", Value: authdetails.Email}}).Decode(&authuser)
+	if err != nil {
+		helpers.ErrorResonse("Invalid email or password", http.StatusBadRequest, res)
+		return
+	}
+
+	// Check password
+	check := helpers.CheckPasswordHash(authuser.Password, authdetails.Password)
+	if !check {
+		helpers.ErrorResonse("Invalid email or password", http.StatusBadRequest, res)
+		return
+	}
+
+	// Generate JWT Token
+	validToken, err := helpers.GenerateJWT(authuser.ID.Hex())
+	if err != nil {
+		helpers.SeverError(err, res)
+		return
+	}
+
+	var token models.Token
+	token.Token = validToken
+	res.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(res).Encode(token)
+}

@@ -16,3 +16,12 @@ type SanitizedUser struct {
 	FirstName string             `json:"firstName" `
 	LastName  string             `json:"lastName"`
 }
+
+type Authentication struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type Token struct {
+	Token string `json:"token"`
+}

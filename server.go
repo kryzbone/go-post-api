@@ -23,10 +23,12 @@ func main() {
 	}
 
 	// Create mux Router
-	router := mux.NewRouter()
+	router := mux.NewRouter().StrictSlash(true)
 
 	// Setup routes
 	router.HandleFunc("/", controllers.IndexHandler)
+	router.HandleFunc("/signup/", controllers.SignUp).Methods("POST")
+	router.HandleFunc("/login/", controllers.SignIn).Methods("POST")
 	routers.UserRouter(router)
 	routers.PostRouter(router)
 
